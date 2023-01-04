@@ -68,7 +68,7 @@ async function QueryPolAPI(
     return response.data.result.data;
 }
 
-export default function VerifyButton(props) {
+export default function VerifyButton({onSuccess, ...props}) {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect } = useConnect({
