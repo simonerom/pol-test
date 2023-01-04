@@ -6,8 +6,9 @@ import moment from "moment";
 import { useSignMessage } from "wagmi";
 import axios from "axios";
 import { useState } from "react";
+import { ResultType } from "@remix-run/router/dist/utils";
 
-const GEOSTREAM_API = "https://geo.w3bstream.com/api/pol";
+const GEOSTREAM_API = "https://geo-test.w3bstream.com/api/pol";
 
 function createSiweMessage(
   address: string,
@@ -19,11 +20,11 @@ function createSiweMessage(
 ) {
   const locations = [
     {
-      scaled_latitude: latitude ,
-      scaled_longitude: longitude ,
+      scaled_latitude: latitude,
+      scaled_longitude: longitude,
       distance: distance,
       from: from,
-      to: to
+      to: to,
     },
   ];
 
@@ -43,26 +44,28 @@ function createSiweMessage(
 }
 
 async function QueryPolAPI(
-    locations, 
-    address: string, 
-    signature: string, 
-    message: string | Uint8Array) {
-
-    const body = {
-        signature: signature,
-        message: message,
-        owner: address,
-        locations: locations
-    }
-    console.log(`Querying GeoStream API with body: `, body);
-    const response = await axios.post(GEOSTREAM_API, body)
-    .catch((error) => {
-        console.log(`Querying GeoStream API failed with error: ${error}.`)
-        console.log("Endpoint: ", GEOSTREAM_API);
-        console.log("Body: ", body);
-    });
-    console.log(`Query result.`, response);
-    return response?.data.result.data;
+  locations,
+  address: string,
+  signature: string,
+  message: string | Uint8Array
+) {
+  const body = {
+    signature: signature,
+    message: message,
+    owner: address,
+    locations: locations,
+  };
+  console.log(`Querying GeoStream API with body: `, body);
+  console.log(`Querying GeoStream API with endpoint: `, GEOSTREAM_API);
+  
+  const response = await axios.post(GEOSTREAM_API, body).catch((error) => {
+    console.log(`Querying GeoStream API failed with error: ${error}.`);
+    console.log("Endpoint: ", GEOSTREAM_API);
+    console.log("Body: ", body);
+  });
+  console.log(`Query result.`, response);
+  if (typeof response === "object")
+    return response.data.result.data;
 }
 
 export default function VerifyButton(props) {
@@ -72,32 +75,36 @@ export default function VerifyButton(props) {
     connector: new InjectedConnector(),
   });
 
-  const [ isQuerying, setIsQuerying ] = useState(false);
+  const [isQuerying, setIsQuerying] = useState(false);
 
   const locations = [
     {
-        scaled_latitude: props.latitude * 1e6,
-        scaled_longitude: props.longitude * 1e6,
-        distance: props.distance,
-        from: moment(props.from).unix(),
-        to: moment(props.to).unix(),
-    }];
+      scaled_latitude: props.latitude * 1e6,
+      scaled_longitude: props.longitude * 1e6,
+      distance: props.distance,
+      from: moment(props.from).unix(),
+      to: moment(props.to).unix(),
+    },
+  ];
 
-    console.log(`Locations: `, locations);
+  console.log(`Locations: `, locations);
 
-    const { data, error, isLoading, signMessage } = useSignMessage({
+  const { data, error, isLoading, signMessage } = useSignMessage({
     onSuccess(data, variables) {
       // Verify siwe message when sign message succeeds
       console.log(`Signdature done: ${data}`);
       setIsQuerying(true);
       QueryPolAPI(locations, address, data, variables.message)
-      .then((data) => {
-        console.log(`Query done.`);
-        console.log(`Data: `, data);
-        if (data) {
+        .then((data) => {
+          console.log(`Query done.`);
+          console.log(`Data: `, data);
+          if (data) {
             props.onSuccess(data);
-        }
-      }).finally(() => { setIsQuerying(false); });
+          }
+        })
+        .finally(() => {
+          setIsQuerying(false);
+        });
     },
   });
 
@@ -127,13 +134,24 @@ export default function VerifyButton(props) {
             signMessage({ message });
           }}
         >
-          { 
-            isLoading ? "Signing in Wallet..." : 
-            isQuerying ? <Spinner /> : "Request Proof"
-        }
+          {isLoading ? (
+            "Signing in Wallet..."
+          ) : isQuerying ? (
+            <Spinner />
+          ) : (
+            "Request Proof"
+          )}
         </Button>
-        <Badge mb={6} colorScheme="gray"> {address}</Badge>
-        <Button size={"xs"} {...props} onClick={disconnect} colorScheme={"blackAlpha"}>
+        <Badge mb={6} colorScheme="gray">
+          {" "}
+          {address}
+        </Badge>
+        <Button
+          size={"xs"}
+          {...props}
+          onClick={disconnect}
+          colorScheme={"blackAlpha"}
+        >
           Disconnect
         </Button>
       </VStack>
