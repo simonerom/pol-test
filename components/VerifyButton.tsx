@@ -110,7 +110,7 @@ export default function VerifyButton({onSuccess, ...props}) {
 
   if (!isConnected) {
     return (
-      <Button {...props} onClick={connect} colorScheme={"yellow"}>
+      <Button {...props} onClick={ () => connect} colorScheme={"yellow"}>
         Connect Wallet
       </Button>
     );
@@ -149,7 +149,7 @@ export default function VerifyButton({onSuccess, ...props}) {
         <Button
           size={"xs"}
           {...props}
-          onClick={disconnect}
+          onClick={ () => disconnect}
           colorScheme={"blackAlpha"}
         >
           Disconnect
