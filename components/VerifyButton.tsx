@@ -6,9 +6,8 @@ import moment from "moment";
 import { useSignMessage } from "wagmi";
 import axios from "axios";
 import { useState } from "react";
-import { ResultType } from "@remix-run/router/dist/utils";
 
-const GEOSTREAM_API = "https://geo-test.w3bstream.com/api/pol";
+const GEOSTREAM_API = "https://geo.w3bstream.com/api/pol";
 
 function createSiweMessage(
   address: string,
@@ -55,14 +54,13 @@ async function QueryPolAPI(
     owner: address,
     locations: locations,
   };
+  console.log(`Querying GeoStream API at endpoint: `, GEOSTREAM_API);
   console.log(`Querying GeoStream API with body: `, body);
-  console.log(`Querying GeoStream API with endpoint: `, GEOSTREAM_API);
   
   const response = await axios.post(GEOSTREAM_API, body).catch((error) => {
     console.log(`Querying GeoStream API failed with error: ${error}.`);
-    console.log("Endpoint: ", GEOSTREAM_API);
-    console.log("Body: ", body);
   });
+
   console.log(`Query result.`, response);
   if (typeof response === "object")
     return response.data.result.data;
@@ -74,6 +72,7 @@ export default function VerifyButton({onSuccess, ...props}) {
   const { connect } = useConnect({
     connector: new InjectedConnector(),
   });
+
 
   const [isQuerying, setIsQuerying] = useState(false);
 
@@ -87,8 +86,6 @@ export default function VerifyButton({onSuccess, ...props}) {
     },
   ];
 
-  console.log(`Locations: `, locations);
-
   const { data, error, isLoading, signMessage } = useSignMessage({
     onSuccess(data, variables) {
       // Verify siwe message when sign message succeeds
@@ -99,7 +96,7 @@ export default function VerifyButton({onSuccess, ...props}) {
           console.log(`Query done.`);
           console.log(`Data: `, data);
           if (data) {
-            props.onSuccess(data);
+            onSuccess(data);
           }
         })
         .finally(() => {
@@ -110,7 +107,7 @@ export default function VerifyButton({onSuccess, ...props}) {
 
   if (!isConnected) {
     return (
-      <Button {...props} onClick={ () => connect} colorScheme={"yellow"}>
+      <Button {...props} onClick={ () => connect() } colorScheme={"yellow"}>
         Connect Wallet
       </Button>
     );
@@ -149,7 +146,7 @@ export default function VerifyButton({onSuccess, ...props}) {
         <Button
           size={"xs"}
           {...props}
-          onClick={ () => disconnect}
+          onClick={ () => disconnect() }
           colorScheme={"blackAlpha"}
         >
           Disconnect

@@ -1,39 +1,66 @@
 import {
-  Badge,
   Center,
   Container,
   Flex,
   Heading,
-  Input,
+  HStack,
+  Text,
 } from "@chakra-ui/react";
 import VerifyButton from "../../components/VerifyButton";
 import React, { useState } from "react";
 import useInput from "../../hooks/useInput";
 import { CheckIcon, CloseIcon } from "@chakra-ui/icons";
+import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
+import { historyState, queryState } from "../../atoms/history";
+import HistoryContainer from "../../components/HistoryContainer";
+import { Divider } from '@chakra-ui/react'
+
 
 export default function App() {
+  const query = useRecoilValue(queryState);
+  const setHistory = useSetRecoilState(historyState);
+  const [history, setHistoryState] = useRecoilState(historyState);
+
   const [latitude, latitudeInput] = useInput(
     { type: "number", placeholder: "Latitude", mb: 6 },
-    50.08
+    query.latitude
   );
   const [longitude, longitudeInput] = useInput(
     { type: "number", placeholder: "Longitude", mb: 6 },
-    14.42
+    query.longitude
   );
   const [distance, distanceInput] = useInput(
     { type: "number", placeholder: "Max Distance", mb: 6 },
-    1000
+    query.distance
   );
   const [from, fromInput] = useInput(
     { type: "datetime-local", placeholder: "From", mb: 6 },
-    "2021-01-04T00:00"
+    query.from
   );
   const [to, toInput] = useInput(
     { type: "datetime-local", placeholder: "From", mb: 6 },
-    "2021-01-04T23:00"
+    query.to
   );
 
-  const [status, setStatus] = useState(0);
+  // Add history item
+  const addHistoryItem = () => {
+    setHistory((oldHistory) => 
+    [
+      ...oldHistory, 
+      {
+        id: oldHistory.length,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        distance: Number(distance),
+        from: '2020-01-01',
+        to: '2020-01-02',
+      }
+    ]);
+    console.log("history", history);
+  };
+
+
+  const [queryResult, setStatus] = useState(0);
   return (
     <div>
       <Container height="100vh" mt={12} alignContent={"Center"}>
@@ -50,6 +77,7 @@ export default function App() {
             colorScheme="teal"
             onSuccess={(data) => {
               setStatus(data.length);
+              addHistoryItem();
             }}
             latitude={latitude}
             longitude={longitude}
@@ -57,19 +85,24 @@ export default function App() {
             from={from}
             to={to}
           ></VerifyButton>
-
-          <Center mt={6}>
-            <Heading size={"md"}>Proof Result</Heading>
-          </Center>
-          <Center mt={6}>
-            {status == 0 ? (
-              <CloseIcon color="red.500" boxSize="2em" />
+        <Center>
+            {queryResult == 0 ? (
+              <HStack mt={6}>
+              <CloseIcon color="red.500" boxSize="1em" />
+              <Text>No proof found</Text>
+              </HStack>
             ) : (
-              <CheckIcon color="green.500" boxSize="2em" />
+              <HStack mt={6}>
+              <CheckIcon color="green.500" boxSize="1em" />
+              <Text ml={3} color="green.500">Location proven</Text>
+              </HStack>
             )}
           </Center>
+          <Divider orientation="horizontal" color={"black"} mb={6}/>
+          { history.length > 0 && <HistoryContainer /> }
         </Flex>
       </Container>
     </div>
   );
 }
+
