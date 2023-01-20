@@ -6,8 +6,9 @@ import moment from "moment";
 import { useSignMessage } from "wagmi";
 import axios from "axios";
 import { useState } from "react";
+import { useRecoilValue } from "recoil";
+import { globalState } from "../atoms/global";
 
-const GEOSTREAM_API = "https://geo.w3bstream.com/api/pol";
 
 function createSiweMessage(
   address: string,
@@ -43,6 +44,7 @@ function createSiweMessage(
 }
 
 async function QueryPolAPI(
+  endpoint,
   locations,
   address: string,
   signature: string,
@@ -54,10 +56,10 @@ async function QueryPolAPI(
     owner: address,
     locations: locations,
   };
-  console.log(`Querying GeoStream API at endpoint: `, GEOSTREAM_API);
+  console.log(`Querying GeoStream API at endpoint: `, endpoint);
   console.log(`Querying GeoStream API with body: `, body);
   
-  const response = await axios.post(GEOSTREAM_API, body).catch((error) => {
+  const response = await axios.post(endpoint, body).catch((error) => {
     console.log(`Querying GeoStream API failed with error: ${error}.`);
   });
 
@@ -72,7 +74,7 @@ export default function VerifyButton({onSuccess, ...props}) {
   const { connect } = useConnect({
     connector: new InjectedConnector(),
   });
-
+  const global = useRecoilValue(globalState);
 
   const [isQuerying, setIsQuerying] = useState(false);
 
@@ -86,12 +88,18 @@ export default function VerifyButton({onSuccess, ...props}) {
     },
   ];
 
+  function getEndpoint() {
+    return global.testnet ? global.test_api : global.main_api;
+  }
+
   const { data, error, isLoading, signMessage } = useSignMessage({
     onSuccess(data, variables) {
       // Verify siwe message when sign message succeeds
       console.log(`Signdature done: ${data}`);
       setIsQuerying(true);
-      QueryPolAPI(locations, address, data, variables.message)
+      console.log("Global: ",global);
+      console.log("Endpoint: ",getEndpoint());
+      QueryPolAPI(getEndpoint(), locations, address, data, variables.message)
         .then((data) => {
           console.log(`Query done.`);
           console.log(`Data: `, data);

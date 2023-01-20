@@ -14,6 +14,7 @@ import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
 import { historyState, queryState } from "../../atoms/history";
 import HistoryContainer from "../../components/HistoryContainer";
 import { Divider } from '@chakra-ui/react'
+import NetworkSelector from "../../components/networkSelector";
 
 
 export default function App() {
@@ -66,6 +67,7 @@ export default function App() {
       <Container height="100vh" mt={12} alignContent={"Center"} margin-left="50%">
         <Flex  direction="column" background={"gray.100"} p={12} rounded={6}>
           <Heading mb={6}>Input location coordinates</Heading>
+          <NetworkSelector/>
           {latitudeInput}
           {longitudeInput}
           {distanceInput}
