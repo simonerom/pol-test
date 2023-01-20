@@ -63,13 +63,13 @@ export default function App() {
   const [queryResult, setStatus] = useState(0);
   return (
     <div>
-      <Container height="100vh" mt={12} alignContent={"Center"}>
-        <Flex direction="column" background={"gray.100"} p={12} rounded={6}>
+      <Container height="100vh" mt={12} alignContent={"Center"} margin-left="50%">
+        <Flex  direction="column" background={"gray.100"} p={12} rounded={6}>
           <Heading mb={6}>Input location coordinates</Heading>
           {latitudeInput}
           {longitudeInput}
           {distanceInput}
-          <Flex direction="row">
+          <Flex direction="row" gap={6}>
             {fromInput}
             {toInput}
           </Flex>
